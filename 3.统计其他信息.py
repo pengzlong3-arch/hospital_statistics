@@ -5,6 +5,8 @@ import csv
 
 import pandas as pd
 import os
+import numpy as np
+
 import re
 path = r'D:\实验程序\睡眠测试\exp_1\data'
 os.chdir(path)
@@ -12,7 +14,8 @@ os.chdir(path)
 #读取两个表格
 def read_excel():
     csv1 = pd.read_excel('数据合并.xlsx',sheet_name='汇总统计')
-    csv2 = pd.read_excel('睡眠障碍信息表.xlsx',sheet_name='Sheet1',usecols=['姓名','性别','年龄','病史','用药情况','PSQI-total','SAS','SDS'])
+    csv2 = pd.read_excel('睡眠障碍信息表.xlsx',sheet_name='Sheet1',usecols=['姓名','性别','年龄','病史','用药情况'])
+    csv2['PQSI'] = np.nan        #增加一列空，给下一个程序做判断
     return csv1,csv2
 
 #表格信息合并

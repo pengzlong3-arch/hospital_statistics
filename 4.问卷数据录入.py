@@ -1,12 +1,12 @@
 '''
 把SDS,SAS问卷手动按表格名字顺序录入
 '''
-import csv
+
 import os
 import pandas as pd
 import numpy as np
-from pandas.core import col
-from statsmodels.miscmodels import count
+
+
 
 from 计分 import score
 
@@ -41,10 +41,12 @@ class Method():
                 self.csv.iloc[i, 12] = 1
             else:
                 continue
+            #每次自动保存
+            self.save()
             #退出保存
-            note = input('是否退出y/n?\n')
-            if note.strip().upper() == 'Y':
-                self.save()
+            note = input('是否继续录y/n?\n')
+            if note.strip().upper() == 'N':
+                self.del_copy()
                 return
     #调用计分方法
     def type_in(self):
@@ -58,19 +60,23 @@ class Method():
             new = pd.concat([i for i in self.new_data],axis='rows')
         else:
             new = self.new_data[0]
-        #建一个新的表格,后面方便结合
+        #建一个新的表格,每次输入完毕就保存一个备份
+        new.to_excel('PQSI原始数据汇总(备份).xlsx', sheet_name='汇总统计', index=False)
         if not os.path.exists('PQSI原始数据汇总.xlsx'):
-            new.to_excel('PQSI原始数据汇总.xlsx',sheet_name='汇总统计',index=False)
-            new_pqsi = pd.read_excel('PQSI原始数据汇总.xlsx',sheet_name='汇总统计')
+            new_pqsi = pd.read_excel('PQSI原始数据汇总(备份).xlsx',sheet_name='汇总统计')
         else:
             old_pqsi = pd.read_excel('PQSI原始数据汇总.xlsx', sheet_name='汇总统计')
             new_pqsi = pd.concat([old_pqsi,new],axis='rows')
-            new_pqsi.to_excel('PQSI原始数据汇总.xlsx',sheet_name='汇总统计',index=False)
+            new_pqsi.to_excel('PQSI原始数据汇总(备份).xlsx',sheet_name='汇总统计',index=False)
 
         csv_final = pd.merge(self.csv.iloc[:,0:13],new_pqsi,left_on='姓名',right_on='姓名',how='left')
         print(csv_final)
         csv_final.to_excel('数据最终汇总.xlsx',index=False,sheet_name='汇总统计')
 
+    def del_copy(self):
+        os.remove('PQSI原始数据汇总.xlsx')
+        os.rename('PQSI原始数据汇总(备份).xlsx','PQSI原始数据汇总.xlsx')
+        print('已删除备份')
 
 
 
