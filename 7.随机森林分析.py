@@ -44,7 +44,7 @@ def random():
     #评估系数
     explainer = shap.TreeExplainer(estimator_final)
     shap_values = explainer.shap_values(x_test)
-    print(shap_values[:,:,1].shape)       #shap_values 是三维数组
+    print(shap_values[:,:,1].shape)       #shap_values 在这里是三维数组
     print(shap_values[0].shape)
     print(shap_values.shape)
     print(x_test.shape)
@@ -54,7 +54,7 @@ def random():
     plt.figure(figsize=(10, 5), dpi=160)
     shap.summary_plot(shap_values[:,:,1],x_test,show=False)
     shap.dependence_plot('gender',shap_values[:,:,1],x_test,show=False,interaction_index=None) #关掉颜色条,避免干扰
-    # plt.savefig('蜂群摘要图.png')
+    # plt.savefig('蜂群摘要图_随机森林.png')
     plt.tight_layout()               #让图像更紧凑,让文字显示
     plt.show()
 

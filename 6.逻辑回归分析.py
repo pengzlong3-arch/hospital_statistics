@@ -45,7 +45,7 @@ def deal_logistic():
     y_test.astype('str')
 
     #3.建立模型对象
-    estimator = LogisticRegression()
+    estimator = LogisticRegression(max_iter=1000)
     #3.1模型分析
     estimator.fit(x_train,y_train)
     y_pre = estimator.predict(x_test)

@@ -27,7 +27,7 @@ def xgb_classify():
         max_depth=3,
         n_estimators=120,
         learning_rate=0.01,
-        random_state=9,
+        random_state=8,
         objective='binary:logistic'  # 双分类.
     )
     estimator.fit(x_train, y_train)
@@ -39,13 +39,37 @@ def xgb_classify():
     shap_values = explainer.shap_values(x_test)
     print(shap_values[1].shape)       #这里shap_values 是二维数组
     print(shap_values.shape)
-    print(x_test.shape)
+
+    # print(x_test.shape)
 
     #画图
     plt.figure(figsize=(10, 5), dpi=160)
     shap.summary_plot(shap_values,x_test,show=False)
     shap.dependence_plot('gender',shap_values,x_test,show=False,interaction_index=None) #关掉颜色条,避免干扰
-    # plt.savefig('蜂群摘要图.png')
+    # plt.savefig('蜂群摘要图_xgb.png')
     plt.show()
+
+    #画瀑布图尝试解释单个样本
+    print('*'*23)
+    print(shap_values[1])
+    print(y_pre[1])
+    print(x_test.iloc[1,:])
+    print(explainer.expected_value)
+    feature_names = x_test.columns
+    print(feature_names)
+    num = 1
+    exp = shap.Explanation(
+        values=shap_values[num],  #看第一个样本
+        base_values=explainer.expected_value,   #看正类(失眠)
+        data=x_test.iloc[num,:],
+        feature_names=feature_names
+    )
+    plt.figure(figsize=(20, 10), dpi=160)
+    shap.waterfall_plot(exp,show=False)
+    plt.tight_layout()
+    # plt.savefig(f'样本{num}的瀑布图.png')
+    plt.show()
+
+
 if __name__ == '__main__':
     xgb_classify()
