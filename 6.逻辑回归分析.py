@@ -4,10 +4,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split, GridSearchCV,StratifiedKFold
+from sklearn.metrics import classification_report,auc,roc_curve
 from sklearn.preprocessing import StandardScaler,OneHotEncoder
 from sklearn.compose import ColumnTransformer
+import  matplotlib.pyplot as plt
+from numpy import interp
 import os
 
 os.chdir(r'D:\实验程序\睡眠测试\exp_1\data')
@@ -55,5 +57,60 @@ def deal_logistic():
     print(f'系数{estimator.coef_}')
     print(f'负例,正例{estimator.classes_}')
 
+    #5.可视化画图
+
+    # #5.1找到负类正类的概率
+    # y_proba = estimator.predict_proba(x_test)
+    # print(y_proba)
+    # #5.2取到正类
+    # y_score = y_proba[:,1]
+    # #5.3计算roc点
+    # fpr,tpr,thresholds = roc_curve(y_test,y_score)
+    # #5.4计算auc值
+    # roc_auc = auc(fpr,tpr)
+    # #5.5可视化
+    # plt.figure(figsize=(10,5),dpi=160)
+    # plt.plot(fpr,tpr,color='red',lw=2,label=f'ROC curve(AUC = {roc_auc:.3f})')
+    # plt.plot([0,1],[0,1],color='gray',lw=1.5,linestyle='--')
+    # plt.xlim([0.0,1.0])
+    # plt.ylim([0.0,1.05])
+    # plt.xlabel('False positive rate')
+    # plt.ylabel('True positive rate')
+    # plt.title('ROC')
+    # plt.legend(loc='lower right')
+    # # plt.savefig()
+    # plt.show()
+
+    #插入:计算k折来画出更平滑的roc曲线
+    cv = StratifiedKFold(n_splits=3)
+    mean_fpr = np.linspace(0,1,100)  #生成公共的x轴fpr值
+    tprs = []
+    aucs = []
+    for index_train,index_test in cv.split(x,y):     #根据标签y做分层,返回所划分的训练集索引和验证集索引
+        print(index_train)
+        x_train_cv,x_test_cv = x.iloc[index_train],x.iloc[index_test]
+        y_train_cv,y_test_cv= y.iloc[index_train],y.iloc[index_test]
+        estimator.fit(x_train_cv,y_train_cv)         #根据每次划分做训练
+        y_score_cv = estimator.predict_proba(x_test_cv) [:,1]      #计算负类正类的概率,然后取正类
+        fpr,tpr,thresholds = roc_curve(y_test_cv,y_score_cv)       #计算画图所需要的值
+        tprs.append(interp(mean_fpr,fpr,tpr))
+        tprs[-1][0] = 0                      #强制让刚进去(最后)的点x设为0
+        roc_auc = auc(fpr,tpr)
+        aucs.append(roc_auc)
+    mean_tpr = np.mean(tprs,axis=0)
+    mean_tpr[-1] = 1                           #强制让最后一个点y=1
+    mean_auc = auc(mean_fpr,mean_tpr)
+    #可视化
+    plt.figure(figsize=(10,5),dpi=160)
+    plt.plot(mean_fpr,mean_tpr,color='red',lw=2,label=f'ROC curve(AUC = {mean_auc:.3f})')
+    plt.plot([0,1],[0,1],color='gray',lw=1.5,linestyle='--')
+    plt.xlim([0.0,1.0])
+    plt.ylim([0.0,1.05])
+    plt.xlabel('False positive rate')
+    plt.ylabel('True positive rate')
+    plt.title('ROC')
+    plt.legend(loc='lower right')
+    # plt.savefig()
+    plt.show()
 if __name__ == '__main__':
     deal_logistic()

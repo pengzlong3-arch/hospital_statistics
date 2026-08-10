@@ -14,10 +14,14 @@ os.chdir(r'D:\实验程序\睡眠测试\exp_1\data')
 
 def random():
     csv = pd.read_csv('已预处理的数据.csv',index_col=False)
+    csv['gender'] = csv['gender'].astype('category')       #转成分类更严谨
+    csv['score'] = csv['score'].astype('category')
     print(csv.info())
     print(csv.describe())
     x = csv.iloc[:,1:11]
     y = csv.iloc[:,11]
+    print(y.info())
+
     #划分数据集
     x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.2,random_state=8,stratify=y)
     # # 建立随机森林
@@ -42,13 +46,18 @@ def random():
     shap_values = explainer.shap_values(x_test)
     print(shap_values[:,:,1].shape)       #shap_values 是三维数组
     print(shap_values[0].shape)
+    print(shap_values.shape)
     print(x_test.shape)
     # print(x_test.isnull().sum())
 
     #画图
     plt.figure(figsize=(10, 5), dpi=160)
     shap.summary_plot(shap_values[:,:,1],x_test,show=False)
-    plt.savefig('蜂群摘要图.png')
+    shap.dependence_plot('gender',shap_values[:,:,1],x_test,show=False,interaction_index=None) #关掉颜色条,避免干扰
+    # plt.savefig('蜂群摘要图.png')
+    plt.tight_layout()               #让图像更紧凑,让文字显示
+    plt.show()
+
 
 
 
