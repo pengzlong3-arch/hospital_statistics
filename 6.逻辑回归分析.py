@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler,OneHotEncoder
 from sklearn.compose import ColumnTransformer
 import  matplotlib.pyplot as plt
 from numpy import interp
+import statsmodels.api as sm              #描述逻辑回归系数p值
 import os
 
 os.chdir(r'D:\实验程序\睡眠测试\exp_1\data')
@@ -23,7 +24,7 @@ def deal_logistic():
     y = csv.iloc[:,11]
     print(x)
     print(y)
-    x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.2,random_state=5,stratify=y)
+    x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.2,random_state=3,stratify=y)
     print(x_train.info())
     # print(y_train.dtype)
     #2.1特征工程
@@ -57,6 +58,22 @@ def deal_logistic():
     print(f'系数{estimator.coef_}')
     print(f'负例,正例{estimator.classes_}')
 
+
+    #插入:计算逻辑回归系数
+    x_train_sm = sm.add_constant(x_train)   #手动添加截距
+    #构建逻辑回归模型
+    logit_model = sm.Logit(y_train,x_train)
+    result = logit_model.fit(disp=0)  #disp=0关闭迭代打印
+    #打印结果(系数,p值,or,95置信区间)
+    print('*'*23)
+    print(result.pvalues)
+    print('*'*23)
+    print(np.exp(result.params))       #or
+    print(result.params)       #or
+    print('*'*23)
+    print(np.exp(result.conf_int()))  #95%置信区间
+    print('*'*23)
+
     #5.可视化画图
 
     # #5.1找到负类正类的概率
@@ -64,6 +81,8 @@ def deal_logistic():
     # print(y_proba)
     # #5.2取到正类
     # y_score = y_proba[:,1]
+    # print(y_score.shape)
+    # print(y_proba.shape)
     # #5.3计算roc点
     # fpr,tpr,thresholds = roc_curve(y_test,y_score)
     # #5.4计算auc值
@@ -110,7 +129,7 @@ def deal_logistic():
     plt.ylabel('True positive rate')
     plt.title('ROC')
     plt.legend(loc='lower right')
-    # plt.savefig()
-    plt.show()
+    plt.savefig('逻辑回归roc图')
+    # plt.show()
 if __name__ == '__main__':
     deal_logistic()

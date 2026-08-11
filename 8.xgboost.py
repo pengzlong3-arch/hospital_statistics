@@ -21,17 +21,22 @@ def xgb_classify():
     x = csv.iloc[:,1:11]
     y = csv.iloc[:,11]
     #拆分训练集测试集
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=21, stratify=y)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=3,stratify=y)
     estimator = xgb.XGBClassifier(
         enable_categorical= True,
         max_depth=3,
-        n_estimators=120,
+        n_estimators=100,
+        subsample=.8,
+        colsample_bylevel=.8,
+        colsample_bynode=.8,
+        colsample_bytree=.8,
         learning_rate=0.01,
-        random_state=8,
+        random_state=9,
         objective='binary:logistic'  # 双分类.
     )
     estimator.fit(x_train, y_train)
     y_pre = estimator.predict(x_test)
+    print(x_test.head())
     print(f'分类评估报告{classification_report(y_test,y_pre)}')
 
     #评估系数
@@ -40,14 +45,20 @@ def xgb_classify():
     print(shap_values[1].shape)       #这里shap_values 是二维数组
     print(shap_values.shape)
 
-    # print(x_test.shape)
+    print(x_test.shape)
 
     #画图
     plt.figure(figsize=(10, 5), dpi=160)
     shap.summary_plot(shap_values,x_test,show=False)
+    plt.tight_layout()
+    plt.savefig('蜂群摘要图_xbg.png')
+    plt.close()
+
     shap.dependence_plot('gender',shap_values,x_test,show=False,interaction_index=None) #关掉颜色条,避免干扰
-    # plt.savefig('蜂群摘要图_xgb.png')
-    plt.show()
+    plt.tight_layout()               #让图像更紧凑,让文字显示
+    plt.savefig('性别类蜂群_xgb.png')
+    plt.close()
+    # plt.show()
 
     #画瀑布图尝试解释单个样本
     print('*'*23)
@@ -56,19 +67,21 @@ def xgb_classify():
     print(x_test.iloc[1,:])
     print(explainer.expected_value)
     feature_names = x_test.columns
-    print(feature_names)
-    num = 1
-    exp = shap.Explanation(
-        values=shap_values[num],  #看第一个样本
-        base_values=explainer.expected_value,   #看正类(失眠)
-        data=x_test.iloc[num,:],
-        feature_names=feature_names
-    )
-    plt.figure(figsize=(20, 10), dpi=160)
-    shap.waterfall_plot(exp,show=False)
-    plt.tight_layout()
-    # plt.savefig(f'样本{num}的瀑布图.png')
-    plt.show()
+    # print(feature_names)
+    print(f'该测试集的列表\n{x_test}')
+    for num in range(x_test.shape[0]):
+        exp = shap.Explanation(
+            values=shap_values[num],  #看第一个样本
+            base_values=explainer.expected_value,   #看正类(失眠)
+            data=x_test.iloc[num,:],
+            feature_names=feature_names
+        )
+        plt.figure(figsize=(20, 10), dpi=160)
+        shap.waterfall_plot(exp,show=False)
+        plt.title(f'Xgb_Subject{num}')
+        plt.tight_layout()
+        plt.savefig(f'xgboost样本{num}的瀑布图.png')
+        # plt.show()
 
 
 if __name__ == '__main__':

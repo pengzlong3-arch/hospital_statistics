@@ -21,7 +21,7 @@ def deal_general():
     nouse_col =use_col.query('A正确率<=0.8 & V正确率<=0.8 &AV正确率<=0.8')
     print(f'剔除的数据{nouse_col}')
     #1.4把总分划分为失眠和非失眠两类,0为无失眠,1为有失眠
-    use_col1['总分'] = pd.cut(use_col1['总分'],bins=[0,9,21],labels=[0,1])   #0无失眠,1失眠
+    use_col1['总分'] = pd.cut(use_col1['总分'],bins=[0,9,22],labels=[0,1])   #0无失眠,1失眠
     use_col1['性别'] = use_col1['性别'].map({'男':1,'女':0})
     #1.5把总分移动到最后一列
     score_col = use_col1.pop('总分')
@@ -43,7 +43,6 @@ def deal_general():
     print(use_col1.info())
     # print(use_col.describe())
     use_col1.to_csv('已预处理的数据.csv',index=False)
-
 
 
 
