@@ -1,5 +1,8 @@
 '''
 进行数据处理
+    把正确率低于0.8的剔除
+    把失眠根据总分划分为两类
+    性别男女改成0，1编码
 '''
 import pandas as pd
 import numpy as np
@@ -43,7 +46,9 @@ def deal_general():
     print(use_col1.info())
     # print(use_col.describe())
     use_col1.to_csv('已预处理的数据.csv',index=False)
-
+    use_col1.describe().to_csv('描述统计.csv',index=True)
+    print(use_col1.describe())
+    print(use_col1['gender'].value_counts())
 
 
 if __name__ == '__main__':

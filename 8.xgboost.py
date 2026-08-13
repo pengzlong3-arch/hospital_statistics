@@ -2,6 +2,7 @@
 
 '''
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 import os
 from sklearn.metrics import classification_report
@@ -14,8 +15,7 @@ os.chdir(r'D:\实验程序\睡眠测试\exp_1\data')
 def xgb_classify():
     #1.读取csv文件
     csv = pd.read_csv('已预处理的数据.csv',index_col=False)
-    csv['gender'] = csv['gender'].astype('category')       #转成分类更严谨
-    csv['score'] = csv['score'].astype('category')
+    # enable_categorical=False 时不能转category，保持数值型即可
     print(csv.describe())
     print(csv.info())
     x = csv.iloc[:,1:11]
@@ -23,7 +23,7 @@ def xgb_classify():
     #拆分训练集测试集
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=3,stratify=y)
     estimator = xgb.XGBClassifier(
-        enable_categorical= True,
+        enable_categorical=False,  # interventional模式下不支持categorical
         max_depth=3,
         n_estimators=100,
         subsample=.8,
@@ -39,11 +39,13 @@ def xgb_classify():
     print(x_test.head())
     print(f'分类评估报告{classification_report(y_test,y_pre)}')
 
-    #评估系数
-    explainer = shap.TreeExplainer(estimator)
+    #评估系数（probability空间 + interventional，让瀑布图直接显示概率）
+    explainer = shap.TreeExplainer(estimator, x_train.iloc[:100],
+                                   model_output='probability',
+                                   feature_perturbation='interventional')
     shap_values = explainer.shap_values(x_test)
     print(shap_values[1].shape)       #这里shap_values 是二维数组
-    print(shap_values.shape)
+    print(shap_values)
 
     print(x_test.shape)
 
@@ -63,16 +65,22 @@ def xgb_classify():
     #画瀑布图尝试解释单个样本
     print('*'*23)
     print(shap_values[1])
-    print(y_pre[1])
-    print(x_test.iloc[1,:])
-    print(explainer.expected_value)
+    print(y_train.unique())
+    print(y_pre)
+    # print(y_test.to_numpy())
+    # print(x_test.iloc[1,:])
+    # print(explainer.expected_value)
     feature_names = x_test.columns
     # print(feature_names)
-    print(f'该测试集的列表\n{x_test}')
+    # print(f'该测试集的列表\n{x_test}')
+
+    prob_lst = []
     for num in range(x_test.shape[0]):
+        # SHAP已在概率空间，raw_sum 直接等于 P(1)
+        prob = explainer.expected_value + shap_values[num].sum()
         exp = shap.Explanation(
             values=shap_values[num],  #看第一个样本
-            base_values=explainer.expected_value,   #看正类(失眠)
+            base_values=explainer.expected_value,   #看正类(失眠)的基值
             data=x_test.iloc[num,:],
             feature_names=feature_names
         )
@@ -82,6 +90,10 @@ def xgb_classify():
         plt.tight_layout()
         plt.savefig(f'xgboost样本{num}的瀑布图.png')
         # plt.show()
+        prob_lst.append(prob)
+    print(prob_lst)
+    print(estimator.predict_proba(x_test))
+
 
 
 if __name__ == '__main__':

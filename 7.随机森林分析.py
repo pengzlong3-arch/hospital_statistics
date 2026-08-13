@@ -49,7 +49,7 @@ def random():
     shap_values = explainer.shap_values(x_test)
     # print(shap_values[:,:,1].shape)       #shap_values 在这里是三维数组
     # print(shap_values[0].shape)
-    # print(shap_values.shape)
+    print(shap_values)
     # print(x_test.shape)
     # print(x_test.isnull().sum())
 
@@ -68,19 +68,25 @@ def random():
     # plt.show()
 
     #画瀑布图尝试解释单个样本
-    print('*'*23)
-    print(shap_values[2,1])
-    print('*' * 23)
-    print(y_pre[1])     #查看第一类
-    print('*' * 23)
-    print(x_test.iloc[1,:])
-    print('*' * 23)
-    print(explainer.expected_value)
+    print(y_pre)
+    print(y_test.to_numpy())
+    # print('*'*23)
+    # print(shap_values[2,1])
+    # print('*' * 23)
+    # print(y_pre[1])     #查看第一类
+    # print('*' * 23)
+    # print(x_test.iloc[1,:])
+    # print('*' * 23)
+    # print(explainer.expected_value)
     feature_names = x_test.columns
     # print(feature_names)
     print(f'该测试集集的列表\n{x_test}')
 
+    prob_lst = []
     for num in range(x_test.shape[0]):
+        # RF的SHAP值在概率空间（expected_value两元素之和=1），raw_sum直接等于predict_proba
+        prob = explainer.expected_value[1] + shap_values[num,:,1].sum()
+        print(explainer.expected_value[1] + shap_values[num,:,1].sum())
         exp = shap.Explanation(
             values=shap_values[num,:,1],  #查看正类的第一个样本
             base_values=explainer.expected_value[1],   #看正类(失眠)
@@ -93,7 +99,9 @@ def random():
         plt.tight_layout()
         plt.savefig(f'随机森林样本{num}的瀑布图.png')
         # plt.show()
-
+        prob_lst.append(prob)
+    print(prob_lst)
+    print(estimator_final.predict_proba(x_test))
 
 
 

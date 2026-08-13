@@ -9,7 +9,9 @@ from sklearn.metrics import classification_report,auc,roc_curve
 from sklearn.preprocessing import StandardScaler,OneHotEncoder
 from sklearn.compose import ColumnTransformer
 import  matplotlib.pyplot as plt
+import seaborn as sns
 from numpy import interp
+from statsmodels.stats.outliers_influence import variance_inflation_factor   #报告VIF值的
 import statsmodels.api as sm              #描述逻辑回归系数p值
 import os
 
@@ -35,44 +37,60 @@ def deal_logistic():
     preprocessor = ColumnTransformer(
         transformers = [
             ('num',StandardScaler(),continue_col),
-            ('cat',OneHotEncoder(),category_col)
+            ('cat',OneHotEncoder(drop='first'),category_col)
         ]
     )
     x_train = preprocessor.fit_transform(x_train)
     x_test = preprocessor.transform(x_test)
 
-    #2.1.2标签转化成str
-    y_train.astype('str')
-    y_test.astype('str')
+    #查看编码哪个是0,哪个是1,女是0,男是1
+    encoder = preprocessor.named_transformers_['cat']
+    print(encoder.categories_)
+
 
     #3.建立模型对象
-    estimator = LogisticRegression(max_iter=1000)
+    estimator = LogisticRegression(penalty=None,max_iter=1000)
     #3.1模型分析
     estimator.fit(x_train,y_train)
     y_pre = estimator.predict(x_test)
     #4.模型评估
-    print(y_test)
+    print(y_test.to_numpy())
     print(y_pre)
     print(f'分类评估报告{classification_report(y_test,y_pre)}')
     print(f'变量{x.columns}')
+    print(f'x的形状{x_train.shape}')
     print(f'系数{estimator.coef_}')
+    print(f'截距{estimator.intercept_}')
     print(f'负例,正例{estimator.classes_}')
 
 
     #插入:计算逻辑回归系数
     x_train_sm = sm.add_constant(x_train)   #手动添加截距
     #构建逻辑回归模型
-    logit_model = sm.Logit(y_train,x_train)
+    logit_model = sm.Logit(y_train,x_train_sm)
     result = logit_model.fit(disp=0)  #disp=0关闭迭代打印
-    #打印结果(系数,p值,or,95置信区间)
+    # 打印结果(系数,p值,or,95置信区间)
     print('*'*23)
     print(result.pvalues)
     print('*'*23)
+    print(result.params)
     print(np.exp(result.params))       #or
-    print(result.params)       #or
+    print(result.params)
     print('*'*23)
     print(np.exp(result.conf_int()))  #95%置信区间
     print('*'*23)
+    #计算VIF值
+    vif_data = pd.DataFrame()
+    vif_data['变量名'] = x.columns
+    vif_data['VIF'] = [variance_inflation_factor(x_train,i) for i in range(x_train.shape[1])]
+    print(vif_data)
+    #查看相关矩阵
+    corr = pd.DataFrame(x_train,columns = x.columns).corr()
+    sns.heatmap(corr,annot=True,cmap='coolwarm')
+    plt.tight_layout()
+    plt.savefig('相关矩阵.png')
+    # plt.show()
+
 
     #5.可视化画图
 
@@ -106,7 +124,7 @@ def deal_logistic():
     tprs = []
     aucs = []
     for index_train,index_test in cv.split(x,y):     #根据标签y做分层,返回所划分的训练集索引和验证集索引
-        print(index_train)
+        # print(index_train)
         x_train_cv,x_test_cv = x.iloc[index_train],x.iloc[index_test]
         y_train_cv,y_test_cv= y.iloc[index_train],y.iloc[index_test]
         estimator.fit(x_train_cv,y_train_cv)         #根据每次划分做训练
@@ -131,5 +149,7 @@ def deal_logistic():
     plt.legend(loc='lower right')
     plt.savefig('逻辑回归roc图')
     # plt.show()
+
+
 if __name__ == '__main__':
     deal_logistic()
