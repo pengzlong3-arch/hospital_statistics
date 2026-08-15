@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# 数据文件（涉及患者隐私，一律不入库）
+*.xlsx
+*.csv
+
+# 输出图片（如需在仓库展示结果图可选择性放开）
+*.png
+*.jpg
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 临时目录（pip 等工具）
+.tmp/
+
+# PyCharm 示例脚本
+main.py
+
+# 嵌套项目「信仰科学」有独立 git 仓库，勿在此仓库跟踪
+信仰科学/
+
+# 个人求职文档（含真实姓名/电话，勿提交至公开仓库）
+简历项目描述.md
+简历修改说明.md
+修改版简历.md
+求职行动指南.md
+彭子龙个人简历.pdf
