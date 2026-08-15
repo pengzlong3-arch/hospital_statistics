@@ -1,0 +1,11 @@
+# 医院睡眠障碍数据分析项目依赖
+# Python 3.13+ 下验证
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.5
+xgboost>=2.0
+shap>=0.46
+statsmodels>=0.14
+matplotlib>=3.8
+seaborn>=0.13
+openpyxl>=3.1
